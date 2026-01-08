@@ -7,6 +7,7 @@ from aiogram import Bot, Dispatcher
 
 from bot.handlers import menu as menu_handlers
 from bot.handlers import start as start_handlers
+from bot.middlewares.deps import DepsMiddleware
 from config import Config
 from db.models import Database, now_ts
 from services.payments import MockPaymentService
@@ -44,10 +45,8 @@ async def main() -> None:
     bot = Bot(token=cfg.bot_token)
     dp = Dispatcher()
 
-    dp["cfg"] = cfg
-    dp["db"] = db
-    dp["xui"] = xui
-    dp["payments"] = payments
+    # Прокидываем зависимости в DI через middleware (надежнее, чем только dp["..."]).
+    dp.update.outer_middleware(DepsMiddleware(cfg=cfg, db=db, xui=xui, payments=payments))
 
     dp.include_router(start_handlers.router)
     dp.include_router(menu_handlers.router)
