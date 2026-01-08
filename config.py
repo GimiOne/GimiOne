@@ -24,6 +24,7 @@ def _get_int(name: str, default: int) -> int:
 class Config:
     bot_token: str
     sqlite_path: str
+    admin_tg_ids: frozenset[int]
 
     xui_base_url: str
     xui_username: str
@@ -41,6 +42,15 @@ class Config:
     def load() -> "Config":
         load_dotenv()
 
+        admin_raw = os.getenv("ADMIN_TG_IDS", "").strip()
+        admin_ids: set[int] = set()
+        if admin_raw:
+            for part in admin_raw.split(","):
+                part = part.strip()
+                if not part:
+                    continue
+                admin_ids.add(int(part))
+
         inbound_id_raw = os.getenv("XUI_INBOUND_ID", "").strip()
         inbound_id = int(inbound_id_raw) if inbound_id_raw else None
         inbound_remark = os.getenv("XUI_INBOUND_REMARK", "").strip() or None
@@ -48,6 +58,7 @@ class Config:
         return Config(
             bot_token=_required("BOT_TOKEN"),
             sqlite_path=os.getenv("SQLITE_PATH", "./db/bot.sqlite3"),
+            admin_tg_ids=frozenset(admin_ids),
             xui_base_url=os.getenv("XUI_BASE_URL", "http://127.0.0.1:54321").rstrip("/"),
             xui_username=_required("XUI_USERNAME"),
             xui_password=_required("XUI_PASSWORD"),

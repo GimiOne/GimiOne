@@ -53,6 +53,7 @@ python3 -m bot.main
 См. `.env.example`. Ключевые:
 
 - **`BOT_TOKEN`**: токен Telegram-бота
+- **`ADMIN_TG_IDS`**: TG ID админов (через запятую). Для них бот автоматически создаёт подписку без оплаты
 - **`XUI_BASE_URL`**: URL панели (должен быть доступен только локально, например `http://127.0.0.1:54321`)
 - **`XUI_USERNAME` / `XUI_PASSWORD`**: учётка панели (не хранить в коде)
 - **`XUI_INBOUND_ID`**: ID inbound (если не задан — бот попробует найти по `XUI_INBOUND_REMARK`, иначе возьмёт первый VLESS inbound)

@@ -150,6 +150,27 @@ class Database:
         await self.conn.commit()
         return await self.get_payment(p_id)
 
+    async def create_or_get_admin_grant_payment(self, *, tg_id: int) -> Payment:
+        """
+        Идемпотентная "оплата" для админского доступа.
+        """
+        idempotency_key = f"admin_grant:{tg_id}"
+        existing = await self.get_payment_by_idempotency(idempotency_key)
+        if existing is not None:
+            if existing.status != "succeeded":
+                return await self.set_payment_status(existing.id, "succeeded")
+            return existing
+
+        payment = await self.create_payment(
+            tg_id=tg_id,
+            provider="admin_grant",
+            amount=0,
+            currency="RUB",
+            idempotency_key=idempotency_key,
+            payload={},
+        )
+        return await self.set_payment_status(payment.id, "succeeded")
+
     async def get_payment(self, payment_id: str) -> Payment:
         cur = await self.conn.execute("SELECT * FROM payments WHERE id = ?", (payment_id,))
         row = await cur.fetchone()
