@@ -25,6 +25,7 @@ class Config:
     bot_token: str
     sqlite_path: str
     admin_tg_ids: frozenset[int]
+    log_level: str
 
     xui_base_url: str
     xui_username: str
@@ -59,6 +60,7 @@ class Config:
             bot_token=_required("BOT_TOKEN"),
             sqlite_path=os.getenv("SQLITE_PATH", "./db/bot.sqlite3"),
             admin_tg_ids=frozenset(admin_ids),
+            log_level=os.getenv("LOG_LEVEL", "INFO").upper(),
             xui_base_url=os.getenv("XUI_BASE_URL", "http://127.0.0.1:54321").rstrip("/"),
             xui_username=_required("XUI_USERNAME"),
             xui_password=_required("XUI_PASSWORD"),

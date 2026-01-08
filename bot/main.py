@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 
 from aiogram import Bot, Dispatcher
 
@@ -33,8 +34,14 @@ async def subscription_watcher(*, db: Database, xui: XUIClient, interval_sec: in
 
 
 async def main() -> None:
-    logging.basicConfig(level=logging.INFO)
     cfg = Config.load()
+    logging.basicConfig(level=getattr(logging, cfg.log_level, logging.INFO))
+    log.info("Starting bot")
+    log.info("CWD=%s", os.getcwd())
+    log.info(".env present=%s", os.path.exists(".env"))
+    log.info("sqlite_path=%s", cfg.sqlite_path)
+    log.info("admin_tg_ids=%s", sorted(cfg.admin_tg_ids))
+    log.info("xui_base_url=%s inbound_id=%s inbound_remark=%s", cfg.xui_base_url, cfg.xui_inbound_id, cfg.xui_inbound_remark)
 
     db = Database(cfg.sqlite_path)
     await db.connect()
@@ -43,6 +50,10 @@ async def main() -> None:
     payments = MockPaymentService(db)
 
     bot = Bot(token=cfg.bot_token)
+    me = await bot.get_me()
+    log.info("Bot username=@%s id=%s", me.username, me.id)
+    # Важно для polling: если раньше был webhook, команды могут "молчать".
+    await bot.delete_webhook(drop_pending_updates=True)
     dp = Dispatcher()
 
     # Прокидываем зависимости в DI через middleware (надежнее, чем только dp["..."]).
