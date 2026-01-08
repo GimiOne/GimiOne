@@ -1,2 +1,2 @@
-__all__ = ["payments", "xui_client"]
+__all__ = ["payments", "xui_client", "admin_access"]
 
