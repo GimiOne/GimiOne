@@ -47,7 +47,7 @@ class XUIClient:
 
     async def login(self) -> None:
         resp = await self._client.post(
-            "/login",
+            "login",
             data={"username": self._username, "password": self._password},
         )
         if resp.status_code >= 400:
@@ -68,7 +68,7 @@ class XUIClient:
         return resp
 
     async def list_inbounds(self) -> list[Inbound]:
-        resp = await self._request("GET", "/panel/inbound/list")
+        resp = await self._request("GET", "panel/inbound/list")
         if resp.status_code >= 400:
             raise XUIError(f"list_inbounds failed: HTTP {resp.status_code}")
         data = _safe_json(resp)
@@ -125,7 +125,7 @@ class XUIClient:
                 }
             ),
         }
-        resp = await self._request("POST", "/panel/inbound/addClient", json=payload)
+        resp = await self._request("POST", "panel/inbound/addClient", json=payload)
         if resp.status_code >= 400:
             raise XUIError(f"add_client failed: HTTP {resp.status_code}")
         data = _safe_json(resp)
@@ -138,12 +138,12 @@ class XUIClient:
         Пробуем наиболее распространённые, без "магии" с интерактивом.
         """
         # variant A
-        resp = await self._request("POST", f"/panel/inbound/delClient/{inbound_id}/{client_uuid}")
+        resp = await self._request("POST", f"panel/inbound/delClient/{inbound_id}/{client_uuid}")
         if resp.status_code < 400:
             return
 
         # variant B
-        resp = await self._request("POST", "/panel/inbound/delClient", json={"id": inbound_id, "clientId": client_uuid})
+        resp = await self._request("POST", "panel/inbound/delClient", json={"id": inbound_id, "clientId": client_uuid})
         if resp.status_code >= 400:
             raise XUIError(f"delete_client failed: HTTP {resp.status_code}")
         data = _safe_json(resp)
