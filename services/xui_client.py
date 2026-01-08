@@ -68,12 +68,20 @@ class XUIClient:
         return resp
 
     async def list_inbounds(self) -> list[Inbound]:
-        resp = await self._request("GET", "panel/inbound/list")
+        # В некоторых сборках список inbounds отдаётся только по POST.
+        resp = await self._request("POST", "panel/inbound/list")
         if resp.status_code >= 400:
             raise XUIError(f"list_inbounds failed: HTTP {resp.status_code}")
         data = _safe_json(resp)
-        obj = _unwrap_xui_obj(data)
-        items = obj.get("list") or obj.get("inbounds") or []
+        items: list[dict[str, Any]] = []
+        if isinstance(data, dict):
+            obj = data.get("obj")
+            if isinstance(obj, list):
+                items = obj
+            elif isinstance(obj, dict):
+                items = obj.get("list") or obj.get("inbounds") or []
+            else:
+                items = data.get("list") or data.get("inbounds") or []
         res: list[Inbound] = []
         for it in items:
             try:
@@ -167,11 +175,20 @@ class XUIClient:
             or {}
         )
 
-        pbk = reality.get("publicKey") or reality.get("public_key") or ""
+        # У некоторых версий 3x-ui ключи лежат в realitySettings.settings
+        settings = reality.get("settings") if isinstance(reality.get("settings"), dict) else {}
+
+        pbk = (
+            settings.get("publicKey")
+            or settings.get("public_key")
+            or reality.get("publicKey")
+            or reality.get("public_key")
+            or ""
+        )
         server_names = reality.get("serverNames") or reality.get("server_names") or []
         short_ids = reality.get("shortIds") or reality.get("short_ids") or []
-        fp = reality.get("fingerprint") or "chrome"
-        spx = reality.get("spiderX") or reality.get("spider_x") or None
+        fp = settings.get("fingerprint") or reality.get("fingerprint") or "chrome"
+        spx = settings.get("spiderX") or reality.get("spiderX") or reality.get("spider_x") or None
 
         sni = server_names[0] if isinstance(server_names, list) and server_names else ""
         sid = short_ids[0] if isinstance(short_ids, list) and short_ids else ""
